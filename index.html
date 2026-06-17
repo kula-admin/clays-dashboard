@@ -1036,7 +1036,92 @@ document.addEventListener('click', e => {
   }
 });
 
-load('this_week');
+if (!window._authPending) load('this_week');
+</script>
+
+<!-- Password protection overlay -->
+<div id="auth-overlay" style="display:none;position:fixed;inset:0;z-index:9999;background:#1C3D35;align-items:center;justify-content:center;overflow:hidden;">
+
+  <svg style="position:absolute;inset:0;width:100%;height:100%;opacity:0.08;pointer-events:none" viewBox="0 0 1400 900" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="1200" cy="120" r="420" fill="none" stroke="#FAE8E4" stroke-width="1.5"/>
+    <circle cx="1200" cy="120" r="300" fill="none" stroke="#FAE8E4" stroke-width="1.5"/>
+    <circle cx="1200" cy="120" r="190" fill="none" stroke="#FAE8E4" stroke-width="1.5"/>
+    <circle cx="1200" cy="120" r="95"  fill="none" stroke="#FAE8E4" stroke-width="1.5"/>
+    <circle cx="160"  cy="820" r="340" fill="none" stroke="#FAE8E4" stroke-width="1.5"/>
+    <circle cx="160"  cy="820" r="230" fill="none" stroke="#FAE8E4" stroke-width="1.5"/>
+    <circle cx="160"  cy="820" r="130" fill="none" stroke="#FAE8E4" stroke-width="1.5"/>
+    <circle cx="160"  cy="820" r="55"  fill="none" stroke="#FAE8E4" stroke-width="1.5"/>
+  </svg>
+
+  <div style="position:relative;background:white;border-radius:20px;padding:48px 52px;width:380px;text-align:center;flex-shrink:0;">
+
+    <svg width="60" height="60" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg" style="margin-bottom:22px">
+      <circle fill-rule="evenodd" clip-rule="evenodd" fill="none" stroke="#1C3D35" stroke-opacity="0.35" cx="40" cy="40" r="39.4"/>
+      <circle fill-rule="evenodd" clip-rule="evenodd" fill="none" stroke="#1C3D35" stroke-width="2.5" cx="40" cy="40" r="35.6"/>
+      <path fill="#1C3D35" d="M17.3,43.3c-0.8,0-1.6-0.3-2.2-0.9c-0.6-0.6-0.9-1.5-0.9-2.3c0-0.9,0.3-1.7,0.9-2.3c0.5-0.6,1.3-1,2.2-1c1,0,2,0.5,2.5,1.4l1.8-1.2c-1-1.4-2.6-2.2-4.3-2.2c-1.4,0-2.8,0.5-3.7,1.6c-2,2.1-2,5.5,0,7.6c1,1,2.3,1.6,3.7,1.6c1.8,0,3.4-0.8,4.4-2.3L20,41.8C19.4,42.7,18.4,43.2,17.3,43.3z"/>
+      <path fill="#1C3D35" d="M25.9,45.2V34.8h2.2v8.5h3.9v2H25.9z"/>
+      <path fill-rule="evenodd" clip-rule="evenodd" fill="#1C3D35" d="M35.2,45.2h2.4l0.9-2.5h3.9l0.7,2.5h2.3l-3.9-10.4h-2.4L35.2,45.2z M40.3,37.2l1.1,3.6h-2.2L40.3,37.2z"/>
+      <path fill="#1C3D35" d="M49.7,34.8l2.5,3.9l2.5-3.9h2.6l-4,5.7v4.7h-2.3v-4.7l-4-5.7H49.7z"/>
+      <path fill="#1C3D35" d="M64.6,39.2l-1.2-0.4c-0.7-0.2-1.1-0.6-1.1-1.1c0-0.6,0.6-1,1.3-1c0.9,0,1.3,0.5,1.3,1.2h2.2c0-1-0.3-1.8-1-2.3c-0.7-0.6-1.5-0.9-2.5-0.9c-0.9,0-1.8,0.3-2.6,0.9c-0.7,0.5-1.1,1.4-1,2.2c0,1.4,0.9,2.4,2.7,3l1.3,0.3c1,0.3,1.3,0.7,1.3,1.2c0,0.7-0.6,1.1-1.5,1.1c-1,0-1.5-0.5-1.6-1.3h-2.2c0,0.9,0.4,1.8,1,2.3c0.7,0.6,1.6,0.9,2.7,0.9c1.3,0,2.4-0.4,3.2-1.3c0.4-0.5,0.6-1.1,0.6-1.7C67.5,40.8,66.6,39.7,64.6,39.2z"/>
+      <path fill="#1C3D35" d="M24.1,29.8h0.7c0.7-1,1.4-1.9,2.3-2.7c1.7-1.7,3.8-3.1,6.1-4c2.2-0.9,4.5-1.3,6.9-1.3c2.4,0,4.7,0.5,6.9,1.4c2.3,0.9,4.3,2.3,6.1,4c0.8,0.8,1.6,1.7,2.2,2.7H56c-1.4-2.1-3.2-4-5.3-5.4c-2-1.4-4.3-2.3-6.7-2.8c-2.4-0.5-4.9-0.5-7.3-0.1c-2.5,0.4-4.9,1.4-7,2.8c-2.2,1.4-4.1,3.3-5.6,5.6L24.1,29.8z"/>
+      <path fill="#1C3D35" d="M55.3,50.2h0.7L56,50.4c-1.4,2.2-3.3,4.1-5.6,5.6c-8.8,5.7-20.6,3.2-26.3-5.6L24,50.2h0.7c3.4,5.1,9.1,8.1,15.2,8.1c4.9,0,9.5-1.9,13-5.4C53.9,52.2,54.6,51.2,55.3,50.2z"/>
+    </svg>
+
+    <div style="font-family:Georgia,'Times New Roman',serif;font-size:23px;font-weight:700;color:#1C3D35;letter-spacing:0.01em;margin-bottom:5px;">Performance Dashboard</div>
+    <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.2em;color:#aaa;margin-bottom:34px;">Paid Media &middot; Analytics &middot; CRM</div>
+
+    <input id="auth-input" type="password" placeholder="Password"
+      style="width:100%;padding:13px 16px;border:1.5px solid #e0ccc7;border-radius:10px;font-size:15px;color:#1C3D35;background:#FDF6F3;box-sizing:border-box;outline:none;margin-bottom:10px;font-family:-apple-system,BlinkMacSystemFont,system-ui,sans-serif;">
+
+    <div id="auth-error" style="display:none;color:#7A1F3D;font-size:12px;margin-bottom:10px;font-weight:500;">Incorrect password. Please try again.</div>
+
+    <button id="auth-btn"
+      style="width:100%;padding:14px;background:#7A1F3D;color:white;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;letter-spacing:0.1em;text-transform:uppercase;font-family:-apple-system,BlinkMacSystemFont,system-ui,sans-serif;">
+      Unlock Dashboard
+    </button>
+
+    <div style="margin-top:26px;padding-top:20px;border-top:1px solid #f2e8e4;">
+      <div style="font-size:10px;color:#ccc;letter-spacing:0.08em;text-transform:uppercase;">Meta &middot; Google Ads &middot; TikTok &middot; GA4 &middot; Salesforce</div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+(function() {
+  var overlay = document.getElementById('auth-overlay');
+  if (sessionStorage.getItem('clays_auth') === '1') { return; }
+  overlay.style.display = 'flex';
+  window._authPending = true;
+  document.getElementById('auth-input').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') checkAuth();
+  });
+  document.getElementById('auth-btn').addEventListener('click', checkAuth);
+})();
+
+function checkAuth() {
+  var pw = document.getElementById('auth-input').value;
+  var errEl = document.getElementById('auth-error');
+  errEl.style.display = 'none';
+  fetch('/api/auth', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ password: pw })
+  }).then(function(r) { return r.json(); }).then(function(json) {
+    if (json.ok) {
+      sessionStorage.setItem('clays_auth', '1');
+      document.getElementById('auth-overlay').style.display = 'none';
+      if (window._authPending) { window._authPending = false; load('this_week'); }
+    } else {
+      errEl.style.display = 'block';
+      document.getElementById('auth-input').value = '';
+      document.getElementById('auth-input').focus();
+    }
+  }).catch(function() {
+    errEl.textContent = 'Connection error. Please try again.';
+    errEl.style.display = 'block';
+  });
+}
 </script>
 </body>
 </html>

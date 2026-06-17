@@ -1,5 +1,5 @@
 /**
- * Vercel Serverless Function â€” Windsor API proxy
+ * Vercel Serverless Function — Windsor API proxy
  * Set environment variable WINDSOR_API_KEY in Vercel project settings.
  */
 export default async function handler(req, res) {
