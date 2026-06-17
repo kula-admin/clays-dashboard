@@ -1,5 +1,5 @@
 /**
- * Vercel Serverless Function â€” Windsor API proxy
+ * Vercel Serverless Function — Windsor API proxy
  * Set environment variable WINDSOR_API_KEY in Vercel project settings.
  */
 export default async function handler(req, res) {
@@ -51,10 +51,13 @@ export default async function handler(req, res) {
   const rows = data?.data ?? [];
   console.log(`[windsor] ${connector} total rows=${rows.length} sample account_id=${rows[0]?.account_id ?? 'none'}`);
 
-  // Filter rows to requested account if Windsor's query param didn't do it
-  const filtered = accountId && rows.some(r => r.account_id)
-    ? rows.filter(r => String(r.account_id) === String(accountId))
+  // Filter rows to requested account if Windsor's query param didn't do it.
+  // Only apply filter if at least one row actually matches — avoids wiping out
+  // connectors (e.g. Salesforce) where account_id format differs from our key.
+  const matched = accountId
+    ? rows.filter(r => r.account_id && String(r.account_id) === String(accountId))
     : rows;
+  const filtered = matched.length > 0 ? matched : rows;
 
   console.log(`[windsor] ${connector} filtered rows=${filtered.length}`);
 
