@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clays Bar — Performance Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js" integrity="sha384-iU8HYtnGQ8Cy4zl7gbNMOhsDTTKX02BTXptVP/vqAWIaTfM7isw76iyZCsjL2eVi" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/gridjs@5.0.2/dist/gridjs.umd.js" integrity="sha384-/XXDzxe4FsGiAe50i/u9pY/Vy/uX654MHB1xoc1BJNnH1WXHhqHga9g3q5tF4gj7" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridjs@5.0.2/dist/theme/mermaid.min.css" integrity="sha384-jZvDSsmGB9oGGT/4l9bHXGoAv1OxvG/cFmSo0dZaSqmBgvQTKDBFAMftlXTmMbNW" crossorigin="anonymous">
+<style>
+/* ── Brand tokens ─────────────────────────────────── */
+:root {
+  color-scheme: light;
+  --teal-dark:   #1C3D35;
+  --teal:        #1A5C4A;
+  --plum:        #7A1F3D;
+  --plum-mid:    #9A2E52;
+  --coral:       #F07070;
+  --coral-light: #F5A0A0;
+  --blush:       #FAE8E4;
+  --blush-mid:   #F2D5CF;
+  --cream:       #FDF6F3;
+  --charcoal:    #1A1A1A;
+  --muted:       #666666;
+  --font-display: Georgia, 'Times New Roman', 'Book Antiqua', Palatino, serif;
+  --font-body:    -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --ring-pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Ccircle cx='24' cy='24' r='20' fill='none' stroke='%23e8c4bc' stroke-width='1'/%3E%3Ccircle cx='24' cy='24' r='13' fill='none' stroke='%23e8c4bc' stroke-width='1'/%3E%3Ccircle cx='24' cy='24' r='6' fill='none' stroke='%23e8c4bc' stroke-width='1'/%3E%3C/svg%3E");
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font-body);
+  background: var(--cream);
+  color: var(--charcoal);
+  min-height: 100vh;
+}
+
+/* ── Header ─────────────────────────────────────────── */
+.site-header {
+  background: var(--teal-dark);
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.header-brand { display: flex; align-items: center; gap: 14px; }
+.stamp-logo { flex-shrink: 0; }
+.header-title {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--blush);
+  line-height: 1.1;
+  letter-spacing: 0.01em;
+}
+.header-sub {
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: rgba(250,232,228,0.55);
+  margin-top: 4px;
+}
+.date-tabs { display: flex; gap: 6px; }
+.date-tab {
+  padding: 7px 16px;
+  border-radius: 30px;
+  border: 1.5px solid rgba(250,232,228,0.35);
+  background: transparent;
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: rgba(250,232,228,0.6);
+  transition: all 0.15s;
+}
+.date-tab:hover { border-color: var(--blush-mid); color: var(--blush); }
+.date-tab.active { background: var(--plum); border-color: var(--plum); color: white; }
+
+/* ── Primary page navigation ─────────────────────── */
+.page-nav {
+  background: white;
+  border-bottom: 1px solid var(--blush-mid);
+  padding: 0 24px;
+  display: flex;
+  align-items: flex-end;
+  gap: 0;
+}
+.page-nav-tab {
+  padding: 11px 22px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: all 0.15s;
+}
+.page-nav-tab:hover { color: var(--teal-dark); }
+.page-nav-tab.active { color: var(--teal-dark); border-bottom-color: var(--plum); }
+
+/* ── Channel sub-navigation ──────────────────────── */
+.channel-nav {
+  background: var(--cream);
+  border-bottom: 1px solid var(--blush-mid);
+  padding: 0 24px;
+  display: none;
+  gap: 0;
+}
+.channel-nav.visible { display: flex; }
+.channel-nav-tab {
+  padding: 9px 20px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.channel-nav-tab:hover { color: var(--charcoal); }
+.channel-nav-tab.active { color: var(--teal-dark); border-bottom-color: var(--plum); }
+.ch-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+/* ── Main content area ───────────────────────────────── */
+.page-body { padding: 20px 24px; }
+
+/* ── KPI stat tiles ──────────────────────────────────── */
+.kpi-row {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.kpi-row-6 {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.kpi-tile {
+  background: white;
+  border: 0.5px solid var(--blush-mid);
+  border-radius: 10px;
+  padding: 14px 16px 12px;
+}
+.kpi-tile.sf { border-color: var(--plum); border-width: 1px; }
+.kpi-tile.accent { border-left: 3px solid var(--plum); }
+.kpi-label {
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+.kpi-value {
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 700;
+  color: var(--teal-dark);
+  line-height: 1;
+}
+.kpi-sub {
+  font-family: var(--font-body);
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 5px;
+}
+
+/* ── Platform dark cards ─────────────────────────────── */
+.platform-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.plat-card {
+  background: var(--teal-dark);
+  border-radius: 10px;
+  padding: 16px 18px;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.plat-card:hover { opacity: 0.9; }
+.plat-card::after {
+  content: '';
+  position: absolute;
+  right: -20px; top: 50%;
+  transform: translateY(-50%);
+  width: 100px; height: 100px;
+  border-radius: 50%;
+  border: 1px solid rgba(250,232,228,0.1);
+  pointer-events: none;
+}
+.plat-card::before {
+  content: '';
+  position: absolute;
+  right: -5px; top: 50%;
+  transform: translateY(-50%);
+  width: 60px; height: 60px;
+  border-radius: 50%;
+  border: 1px solid rgba(250,232,228,0.07);
+  pointer-events: none;
+}
+.plat-eyebrow {
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--coral);
+  margin-bottom: 6px;
+}
+.plat-spend {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--blush);
+  line-height: 1;
+  margin-bottom: 8px;
+}
+.plat-stats {
+  font-family: var(--font-body);
+  font-size: 11px;
+  color: rgba(250,232,228,0.55);
+  display: flex;
+  gap: 14px;
+}
+
+/* ── Chart section ───────────────────────────────────── */
+.charts-row {
+  display: grid;
+  grid-template-columns: 230px 1fr;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.chart-card {
+  background: white;
+  border: 0.5px solid var(--blush-mid);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 14px;
+}
+.chart-head {
+  background: var(--teal-dark);
+  padding: 10px 16px;
+}
+.chart-head-title {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--blush);
+  letter-spacing: 0.01em;
+}
+.chart-body { padding: 14px 16px; }
+.donut-wrap { height: 160px; position: relative; }
+.trend-wrap  { height: 200px; position: relative; }
+
+/* ── Campaign table ──────────────────────────────────── */
+.table-card {
+  background: white;
+  border: 0.5px solid var(--blush-mid);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+.table-head { background: var(--teal-dark); padding: 10px 16px; }
+.table-head-title {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--blush);
+}
+.table-body { padding: 0 4px 4px; }
+
+/* Grid.js brand overrides */
+.gridjs-wrapper { box-shadow: none !important; border: none !important; border-radius: 0 !important; }
+table.gridjs-table { border-collapse: collapse; width: 100%; }
+.gridjs-thead th.gridjs-th {
+  background: #f9f5f3;
+  padding: 8px 14px;
+  text-align: left;
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--muted);
+  border-bottom: 1px solid var(--blush-mid);
+  white-space: nowrap;
+}
+.gridjs-tbody td.gridjs-td {
+  padding: 10px 14px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  border-bottom: 1px solid #fdf0ed;
+  vertical-align: middle;
+}
+.gridjs-tbody tr:last-child td { border-bottom: none; }
+.gridjs-tbody tr:hover td { background: #fdf8f6; }
+.gridjs-footer { display: none !important; }
+button.gridjs-sort { background: transparent; border: none; cursor: pointer; opacity: 0.4; font-size: 9px; margin-left: 3px; }
+button.gridjs-sort-asc, button.gridjs-sort-desc { opacity: 1; color: var(--plum); }
+.spend-val {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--teal-dark);
+}
+.badge {
+  display: inline-block;
+  padding: 3px 9px;
+  border-radius: 30px;
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.badge-meta   { background: var(--plum);      color: white; }
+.badge-google { background: var(--teal-dark); color: var(--blush); }
+.badge-tiktok { background: var(--coral);     color: white; }
+
+/* ── Footer timestamp ────────────────────────────────── */
+.last-updated {
+  font-family: var(--font-body);
+  font-size: 10px;
+  color: var(--blush-mid);
+  text-align: right;
+  padding-bottom: 4px;
+}
+
+/* ── States ──────────────────────────────────────────── */
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  gap: 14px;
+}
+.loading-rings { width: 48px; height: 48px; position: relative; }
+.loading-rings span {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1.5px solid var(--blush-mid);
+  animation: pulse 1.8s ease-in-out infinite;
+}
+.loading-rings span:nth-child(1) { inset: 14px; animation-delay: 0s; }
+.loading-rings span:nth-child(2) { inset: 7px;  animation-delay: 0.25s; }
+.loading-rings span:nth-child(3) { inset: 0;    animation-delay: 0.5s; }
+@keyframes pulse {
+  0%, 100% { opacity: 0.25; }
+  50%       { opacity: 1; border-color: var(--plum); }
+}
+.loading-text {
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--muted);
+}
+.error-banner {
+  background: #fef2f2;
+  border: 0.5px solid var(--coral-light);
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--plum);
+  margin-bottom: 12px;
+}
+</style>
+</head>
+<body>
+
+<!-- ── Header ─────────────────────────────────────────── -->
+<header class="site-header">
+  <div class="header-brand">
+    <svg width="52" height="52" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg" class="stamp-logo">
+      <circle stroke-opacity="0.6" fill-rule="evenodd" clip-rule="evenodd" fill="none" stroke="#FFFFFF" cx="40" cy="40" r="39.4"/>
+      <circle fill-rule="evenodd" clip-rule="evenodd" fill="none" stroke="#FFFFFF" stroke-width="2.5" cx="40" cy="40" r="35.6"/>
+      <path fill="#FFFFFF" d="M17.3,43.3c-0.8,0-1.6-0.3-2.2-0.9c-0.6-0.6-0.9-1.5-0.9-2.3c0-0.9,0.3-1.7,0.9-2.3c0.5-0.6,1.3-1,2.2-1c1,0,2,0.5,2.5,1.4l1.8-1.2c-1-1.4-2.6-2.2-4.3-2.2c-1.4,0-2.8,0.5-3.7,1.6c-2,2.1-2,5.5,0,7.6c1,1,2.3,1.6,3.7,1.6c1.8,0,3.4-0.8,4.4-2.3L20,41.8C19.4,42.7,18.4,43.2,17.3,43.3z"/>
+      <path fill="#FFFFFF" d="M25.9,45.2V34.8h2.2v8.5h3.9v2H25.9z"/>
+      <path fill-rule="evenodd" clip-rule="evenodd" fill="#FFFFFF" d="M35.2,45.2h2.4l0.9-2.5h3.9l0.7,2.5h2.3l-3.9-10.4h-2.4L35.2,45.2z M40.3,37.2l1.1,3.6h-2.2L40.3,37.2z"/>
+      <path fill="#FFFFFF" d="M49.7,34.8l2.5,3.9l2.5-3.9h2.6l-4,5.7v4.7h-2.3v-4.7l-4-5.7H49.7z"/>
+      <path fill="#FFFFFF" d="M64.6,39.2l-1.2-0.4c-0.7-0.2-1.1-0.6-1.1-1.1c0-0.6,0.6-1,1.3-1c0.9,0,1.3,0.5,1.3,1.2h2.2c0-1-0.3-1.8-1-2.3c-0.7-0.6-1.5-0.9-2.5-0.9c-0.9,0-1.8,0.3-2.6,0.9c-0.7,0.5-1.1,1.4-1,2.2c0,1.4,0.9,2.4,2.7,3l1.3,0.3c1,0.3,1.3,0.7,1.3,1.2c0,0.7-0.6,1.1-1.5,1.1c-1,0-1.5-0.5-1.6-1.3h-2.2c0,0.9,0.4,1.8,1,2.3c0.7,0.6,1.6,0.9,2.7,0.9c1.3,0,2.4-0.4,3.2-1.3c0.4-0.5,0.6-1.1,0.6-1.7C67.5,40.8,66.6,39.7,64.6,39.2z"/>
+      <path fill="#FFFFFF" d="M24.1,29.8h0.7c0,0,0,0,0,0l0,0c0.7-1,1.4-1.9,2.3-2.7c1.7-1.7,3.8-3.1,6.1-4c2.2-0.9,4.5-1.3,6.9-1.3h0c2.4,0,4.7,0.5,6.9,1.4c2.3,0.9,4.3,2.3,6.1,4c0.8,0.8,1.6,1.7,2.2,2.7l0,0c0,0,0,0,0,0H56c0,0,0,0,0,0c0,0,0,0,0,0L56,29.6c-1.4-2.1-3.2-4-5.3-5.4c-2-1.4-4.3-2.3-6.7-2.8c-2.4-0.5-4.9-0.5-7.3-0.1c-2.5,0.4-4.9,1.4-7,2.8c-2.2,1.4-4.1,3.3-5.6,5.6L24.1,29.8C24,29.7,24,29.8,24.1,29.8L24.1,29.8C24.1,29.8,24.1,29.8,24.1,29.8z"/>
+      <path fill="#FFFFFF" d="M55.3,50.2h0.7l0,0c0,0,0,0,0,0c0,0,0,0,0,0L56,50.4c-1.4,2.2-3.3,4.1-5.6,5.6c-8.8,5.7-20.6,3.2-26.3-5.6L24,50.2c0,0,0,0,0,0c0,0,0,0,0,0h0.7c0,0,0,0,0,0l0,0c3.4,5.1,9.1,8.1,15.2,8.1h0c4.9,0,9.5-1.9,13-5.4C53.9,52.2,54.6,51.2,55.3,50.2L55.3,50.2C55.3,50.2,55.3,50.2,55.3,50.2z"/>
+    </svg>
+    <div class="header-copy">
+      <div class="header-title">Performance Dashboard</div>
+      <div class="header-sub">Meta · Google Ads · TikTok · GA4 · Salesforce</div>
+    </div>
+  </div>
+  <div class="date-tabs">
+    <button class="date-tab active" data-range="this_week">This Week</button>
+    <button class="date-tab" data-range="last_week">Last Week</button>
+    <button class="date-tab" data-range="this_yearT">Year to Date</button>
+  </div>
+</header>
+
+<!-- ── Primary page navigation ─────────────────────────── -->
+<nav class="page-nav" id="page-nav">
+  <button class="page-nav-tab active" data-page="overview">Overview</button>
+  <button class="page-nav-tab" data-page="channels">Channels</button>
+</nav>
+
+<!-- ── Channel sub-navigation ───────────────────────────── -->
+<nav class="channel-nav" id="channel-nav">
+  <button class="channel-nav-tab active" data-channel="meta">
+    <span class="ch-dot" style="background:#7A1F3D"></span>Meta
+  </button>
+  <button class="channel-nav-tab" data-channel="google">
+    <span class="ch-dot" style="background:#1A5C4A"></span>Google Ads
+  </button>
+  <button class="channel-nav-tab" data-channel="tiktok">
+    <span class="ch-dot" style="background:#F07070"></span>TikTok
+  </button>
+</nav>
+
+<!-- ── Page body ─────────────────────────────────────── -->
+<main class="page-body">
+  <div id="main-content">
+    <div class="loading-state">
+      <div class="loading-rings"><span></span><span></span><span></span></div>
+      <div class="loading-text">Loading live data</div>
+    </div>
+  </div>
+</main>
+
+<script>
+/* ── Config ──────────────────────────────────────── */
+const ACCOUNTS = {
+  facebook:         '228552499100111',
+  google_ads:       '603-364-6250',
+  tiktok:           '7418620757103706129',
+  googleanalytics4: '320567621',
+  salesforce:       'sean@electricglue.com'
+};
+const PALETTE = {
+  meta:   '#7A1F3D',
+  google: '#1A5C4A',
+  tiktok: '#F07070',
+};
+
+/* ── State ───────────────────────────────────────── */
+let charts = {};
+let state = { page: 'overview', channel: 'meta', range: 'this_week' };
+let cache = null;
+
+/* ── Date helpers ────────────────────────────────── */
+function fmt_date(d) { return d.toISOString().slice(0, 10); }
+function getRange(key) {
+  const today = new Date();
+  const dow = today.getDay();
+  const daysFromMon = dow === 0 ? 6 : dow - 1;
+  if (key === 'this_week') {
+    const mon = new Date(today);
+    mon.setDate(today.getDate() - daysFromMon);
+    return { date_from: fmt_date(mon), date_to: fmt_date(today) };
+  }
+  if (key === 'last_week') {
+    const mon = new Date(today);
+    mon.setDate(today.getDate() - daysFromMon - 7);
+    const sun = new Date(mon);
+    sun.setDate(mon.getDate() + 6);
+    return { date_from: fmt_date(mon), date_to: fmt_date(sun) };
+  }
+  return { date_preset: key };
+}
+
+/* ── Fetch — calls the Netlify Function proxy ── */
+async function fetchConn(connector, fields, account, range) {
+  const body = JSON.stringify({ connector, fields, accounts: [account], ...range });
+  const r = await fetch('/api/windsor', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body,
+  });
+  if (!r.ok) {
+    const err = await r.json().catch(() => ({}));
+    throw new Error(`${connector}: ${err.error ?? r.statusText}`);
+  }
+  const json = await r.json();
+  // Windsor REST API returns { data: [...] }
+  return json.data ?? json.result ?? [];
+}
+
+/* ── Utility ─────────────────────────────────────── */
+const sum  = (data, f) => data.reduce((s, r) => s + (parseFloat(r[f]) || 0), 0);
+const gbp  = (n, dp=0) => '£' + (n||0).toLocaleString('en-GB', {minimumFractionDigits:dp, maximumFractionDigits:dp});
+const fmt  = n => (n||0).toLocaleString('en-GB', {maximumFractionDigits:0});
+const pct  = n => ((n||0)*100).toFixed(1)+'%';
+
+function byDate(data, field) {
+  const m = {};
+  data.forEach(r => { m[r.date] = (m[r.date]||0) + (parseFloat(r[field])||0); });
+  return m;
+}
+
+function aggregateCampaigns(data, nameField, platform, clickField, convField, convField2) {
+  const a = {};
+  data.forEach(r => {
+    const k = r[nameField] || '(unknown)';
+    if (!a[k]) a[k] = { platform, campaign: k, spend:0, impressions:0, clicks:0, conversions:0 };
+    a[k].spend       += parseFloat(r.spend)       || 0;
+    a[k].impressions += parseFloat(r.impressions) || 0;
+    a[k].clicks      += parseFloat(r[clickField]) || 0;
+    a[k].conversions += parseFloat(r[convField])  || 0;
+    if (convField2) a[k].conversions += parseFloat(r[convField2]) || 0;
+  });
+  return Object.values(a);
+}
+
+function destroyCharts() {
+  Object.values(charts).forEach(c => { try { c.destroy(); } catch(e){} });
+  charts = {};
+}
+
+/* ── Load data ───────────────────────────────────── */
+async function load(rangeKey) {
+  state.range = rangeKey;
+  const range = getRange(rangeKey);
+  destroyCharts();
+  document.getElementById('main-content').innerHTML = `
+    <div class="loading-state">
+      <div class="loading-rings"><span></span><span></span><span></span></div>
+      <div class="loading-text">Fetching live data</div>
+    </div>`;
+
+  const errors = [];
+  const [fbData, gadsData, ttData, ga4Data, sfData] = await Promise.all([
+    fetchConn('facebook', [
+      'date','campaign','spend','impressions','clicks','ctr','cpc',
+      'outbound_clicks_outbound_click',
+      'conversions_offsite_conversion_fb_pixel_custom_paymentcompleted',
+      'actions_purchase'
+    ], ACCOUNTS.facebook, range).catch(e=>{errors.push(e.message);return[];}),
+    fetchConn('google_ads',
+      ['date','campaign','spend','impressions','clicks','ctr','cpc','conversions'],
+      ACCOUNTS.google_ads, range).catch(e=>{errors.push(e.message);return[];}),
+    fetchConn('tiktok',
+      ['date','campaign_name','spend','impressions','clicks','ctr','cpc','conversions'],
+      ACCOUNTS.tiktok, range).catch(e=>{errors.push(e.message);return[];}),
+    fetchConn('googleanalytics4',
+      ['date','sessions','conversions'],
+      ACCOUNTS.googleanalytics4, range).catch(e=>{errors.push(e.message);return[];}),
+    fetchConn('salesforce',
+      ['date','booking__c_total_cost__c','lead_count'],
+      ACCOUNTS.salesforce, range).catch(e=>{errors.push(e.message);return[];})
+  ]);
+
+  cache = { fbData, gadsData, ttData, ga4Data, sfData, errors };
+  render();
+}
+
+/* ── Navigation state ─────────────────────────────── */
+function updateNavUI() {
+  document.querySelectorAll('.page-nav-tab').forEach(t =>
+    t.classList.toggle('active', t.dataset.page === state.page));
+  const channelNav = document.getElementById('channel-nav');
+  if (state.page === 'channels') {
+    channelNav.classList.add('visible');
+    document.querySelectorAll('.channel-nav-tab').forEach(t =>
+      t.classList.toggle('active', t.dataset.channel === state.channel));
+  } else {
+    channelNav.classList.remove('visible');
+  }
+}
+
+/* ── Render dispatcher ───────────────────────────── */
+function render() {
+  if (!cache) return;
+  updateNavUI();
+  destroyCharts();
+  if (state.page === 'overview') renderOverview();
+  else renderChannel(state.channel);
+}
+
+/* ── Overview page ───────────────────────────────── */
+function renderOverview() {
+  const { fbData, gadsData, ttData, ga4Data, sfData, errors } = cache;
+
+  /* Spend */
+  const fbSpend   = sum(fbData,   'spend');
+  const gadsSpend = sum(gadsData, 'spend');
+  const ttSpend   = sum(ttData,   'spend');
+  const total     = fbSpend + gadsSpend + ttSpend;
+
+  /* Link clicks — Meta uses outbound_clicks, others use clicks */
+  const fbLinkClicks  = sum(fbData,   'outbound_clicks_outbound_click');
+  const gadsClicks    = sum(gadsData, 'clicks');
+  const ttClicks      = sum(ttData,   'clicks');
+  const allClicks     = fbLinkClicks + gadsClicks + ttClicks;
+
+  /* Impressions */
+  const fbImpr   = sum(fbData,   'impressions');
+  const gadsImpr = sum(gadsData, 'impressions');
+  const ttImpr   = sum(ttData,   'impressions');
+  const allImpr  = fbImpr + gadsImpr + ttImpr;
+
+  /* Conversions */
+  const fbConv    = sum(fbData,   'conversions_offsite_conversion_fb_pixel_custom_paymentcompleted');
+  const fbPurch   = sum(fbData,   'actions_purchase');
+  const gadsConv  = sum(gadsData, 'conversions');
+  const ttConv    = sum(ttData,   'conversions');
+  const allConv   = fbConv + gadsConv + (ttConv * 1.15);
+
+  /* GA4 */
+  const ga4Sess     = sum(ga4Data, 'sessions');
+  const ga4Conv     = sum(ga4Data, 'conversions');
+  const ga4ConvRate = ga4Sess > 0 ? ga4Conv / ga4Sess : 0;
+
+  /* Salesforce */
+  const sfRevenue   = sum(sfData, 'booking__c_total_cost__c');
+  const sfLeads     = sum(sfData, 'lead_count');
+
+  /* Derived */
+  const avgCpc      = allClicks > 0 ? total / allClicks : 0;
+  const overallCtr  = allImpr  > 0 ? allClicks / allImpr : 0;
+  const costPerLead = sfLeads  > 0 ? total / sfLeads : 0;
+
+  /* Meta Ads card: paymentCompleted + purchase */
+  const fbCardConv  = fbConv + fbPurch;
+
+  /* Date axis */
+  const allDates   = [...new Set([...fbData.map(r=>r.date),...gadsData.map(r=>r.date),...ttData.map(r=>r.date)])].sort();
+  const fbByDate   = byDate(fbData,   'spend');
+  const gadsByDate = byDate(gadsData, 'spend');
+  const ttByDate   = byDate(ttData,   'spend');
+
+  /* Campaigns */
+  const campaigns = [
+    ...aggregateCampaigns(fbData,   'campaign',      'Meta',   'outbound_clicks_outbound_click', 'conversions_offsite_conversion_fb_pixel_custom_paymentcompleted', 'actions_purchase'),
+    ...aggregateCampaigns(gadsData, 'campaign',      'Google', 'clicks',                         'conversions'),
+    ...aggregateCampaigns(ttData,   'campaign_name', 'TikTok', 'clicks',                         'conversions')
+  ].sort((a,b) => b.spend - a.spend);
+
+  document.getElementById('main-content').innerHTML = `
+    ${errors.length ? `<div class="error-banner">⚠ ${errors.join(' · ')}</div>` : ''}
+
+    <!-- KPI tiles -->
+    <div class="kpi-row">
+      <div class="kpi-tile sf">
+        <div class="kpi-label">Booking Revenue</div>
+        <div class="kpi-value">${gbp(sfRevenue)}</div>
+        <div class="kpi-sub">Online bookings</div>
+      </div>
+      <div class="kpi-tile sf">
+        <div class="kpi-label">Leads</div>
+        <div class="kpi-value">${fmt(sfLeads)}</div>
+        <div class="kpi-sub">CPL ${gbp(costPerLead, 0)}</div>
+      </div>
+      <div class="kpi-tile">
+        <div class="kpi-label">GA4 Sessions</div>
+        <div class="kpi-value">${fmt(ga4Sess)}</div>
+        <div class="kpi-sub">Key events ${fmt(ga4Conv)}</div>
+      </div>
+      <div class="kpi-tile">
+        <div class="kpi-label">GA4 Conv. Rate</div>
+        <div class="kpi-value">${pct(ga4ConvRate)}</div>
+        <div class="kpi-sub">${fmt(ga4Conv)} conversions</div>
+      </div>
+      <div class="kpi-tile">
+        <div class="kpi-label">Total Ad Spend</div>
+        <div class="kpi-value">${gbp(total)}</div>
+        <div class="kpi-sub">Meta · Google · TikTok</div>
+      </div>
+      <div class="kpi-tile">
+        <div class="kpi-label">Link Clicks</div>
+        <div class="kpi-value">${fmt(allClicks)}</div>
+        <div class="kpi-sub">Avg CPC ${gbp(avgCpc,2)}</div>
+      </div>
+      <div class="kpi-tile">
+        <div class="kpi-label">Conversions</div>
+        <div class="kpi-value">${fmt(Math.round(allConv))}</div>
+        <div class="kpi-sub">Meta · Google · TikTok</div>
+      </div>
+    </div>
+
+    <!-- Platform cards -->
+    <div class="platform-row">
+      <div class="plat-card" data-nav-channel="meta">
+        <div class="plat-eyebrow">Meta Ads</div>
+        <div class="plat-spend">${gbp(fbSpend)}</div>
+        <div class="plat-stats">
+          <span class="plat-stat-item">${fmt(fbLinkClicks)} link clicks</span>
+          <span class="plat-stat-item">${fmt(Math.round(fbCardConv))} conv.</span>
+        </div>
+      </div>
+      <div class="plat-card" data-nav-channel="google">
+        <div class="plat-eyebrow">Google Ads</div>
+        <div class="plat-spend">${gbp(gadsSpend)}</div>
+        <div class="plat-stats">
+          <span class="plat-stat-item">${fmt(gadsClicks)} clicks</span>
+          <span class="plat-stat-item">${fmt(gadsConv)} conv.</span>
+        </div>
+      </div>
+      <div class="plat-card" data-nav-channel="tiktok">
+        <div class="plat-eyebrow">TikTok Ads</div>
+        <div class="plat-spend">${gbp(ttSpend)}</div>
+        <div class="plat-stats">
+          <span class="plat-stat-item">${fmt(ttClicks)} clicks</span>
+          <span class="plat-stat-item">${fmt(ttConv)} conv.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="charts-row">
+      <div class="chart-card" style="margin-bottom:0">
+        <div class="chart-head"><div class="chart-head-title">Spend Share</div></div>
+        <div class="chart-body"><div class="donut-wrap"><canvas id="donutChart"></canvas></div></div>
+      </div>
+      <div class="chart-card" style="margin-bottom:0">
+        <div class="chart-head"><div class="chart-head-title">Daily Spend by Platform</div></div>
+        <div class="chart-body"><div class="trend-wrap"><canvas id="trendChart"></canvas></div></div>
+      </div>
+    </div>
+
+    <!-- Campaign table -->
+    <div class="table-card" style="margin-top:14px">
+      <div class="table-head"><div class="table-head-title">Campaign Breakdown</div></div>
+      <div class="table-body"><div id="campaignTable"></div></div>
+    </div>
+
+    <div class="last-updated">
+      Updated ${new Date().toLocaleString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}
+    </div>
+  `;
+
+  /* Donut chart */
+  charts.donut = new Chart(document.getElementById('donutChart').getContext('2d'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Meta', 'Google', 'TikTok'],
+      datasets: [{
+        data: [fbSpend, gadsSpend, ttSpend],
+        backgroundColor: [PALETTE.meta, PALETTE.google, PALETTE.tiktok],
+        borderWidth: 3, borderColor: 'white'
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      cutout: '68%',
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: { font:{size:11,family:'system-ui'}, padding:12, usePointStyle:true, pointStyle:'circle', pointStyleWidth:10 }
+        },
+        tooltip: { callbacks: { label: ctx => ` ${gbp(ctx.parsed)} (${(ctx.parsed/total*100).toFixed(1)}%)` } }
+      }
+    }
+  });
+
+  /* Trend chart */
+  charts.trend = new Chart(document.getElementById('trendChart').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: allDates.map(d => d.slice(5).replace('-','/')),
+      datasets: [
+        { label:'Meta',   data: allDates.map(d=>fbByDate[d]||0),   backgroundColor:PALETTE.meta,   stack:'s' },
+        { label:'Google', data: allDates.map(d=>gadsByDate[d]||0), backgroundColor:PALETTE.google, stack:'s' },
+        { label:'TikTok', data: allDates.map(d=>ttByDate[d]||0),  backgroundColor:PALETTE.tiktok, stack:'s' }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { labels:{ font:{size:11}, usePointStyle:true, pointStyle:'circle', pointStyleWidth:10, padding:12 } },
+        tooltip: { callbacks:{ label: ctx => ` ${ctx.dataset.label}: ${gbp(ctx.parsed.y)}` } }
+      },
+      scales: {
+        x: { stacked:true, grid:{display:false}, ticks:{font:{size:11},color:'#999'} },
+        y: { stacked:true, grid:{color:'#f5ede9'}, ticks:{font:{size:11},color:'#999',callback:v=>gbp(v)} }
+      }
+    }
+  });
+
+  /* Campaign table */
+  new gridjs.Grid({
+    columns: [
+      { name:'Platform', width:'95px',
+        formatter: cell => gridjs.html(`<span class="badge badge-${cell==='Meta'?'meta':cell==='Google'?'google':'tiktok'}">${cell}</span>`) },
+      { name:'Campaign' },
+      { name:'Spend',  width:'100px', sort:{compare:(a,b)=>parseFloat(a)-parseFloat(b)},
+        formatter: v => gridjs.html(`<span class="spend-val">${gbp(parseFloat(v))}</span>`) },
+      { name:'Impr.',  width:'90px',  sort:{compare:(a,b)=>parseInt(a)-parseInt(b)},    formatter:v=>fmt(parseInt(v)) },
+      { name:'L.Clicks',width:'85px', sort:{compare:(a,b)=>parseInt(a)-parseInt(b)},   formatter:v=>fmt(parseInt(v)) },
+      { name:'CPC',    width:'75px',  sort:{compare:(a,b)=>parseFloat(a)-parseFloat(b)},formatter:v=>gbp(parseFloat(v),2) },
+      { name:'Conv.',  width:'70px',  sort:{compare:(a,b)=>parseFloat(a)-parseFloat(b)},formatter:v=>parseFloat(v).toFixed(1) }
+    ],
+    data: campaigns.map(c => [
+      c.platform, c.campaign,
+      c.spend.toFixed(2),
+      String(Math.round(c.impressions)),
+      String(Math.round(c.clicks)),
+      c.clicks > 0 ? (c.spend/c.clicks).toFixed(2) : '0.00',
+      c.conversions.toFixed(1)
+    ]),
+    sort: true
+  }).render(document.getElementById('campaignTable'));
+}
+
+/* ── Channel drill-down page ─────────────────────── */
+function renderChannel(ch) {
+  const { fbData, gadsData, ttData, errors } = cache;
+
+  let data, nameField, clickField, convField, convField2, convMult, label, color, cpcLabel, clickLabel;
+
+  if (ch === 'meta') {
+    data = fbData; nameField = 'campaign';
+    clickField = 'outbound_clicks_outbound_click';
+    convField  = 'conversions_offsite_conversion_fb_pixel_custom_paymentcompleted';
+    convField2 = 'actions_purchase';
+    convMult   = 1;
+    label      = 'Meta Ads'; color = PALETTE.meta;
+    clickLabel = 'Link Clicks'; cpcLabel = 'CPC (link)';
+  } else if (ch === 'google') {
+    data = gadsData; nameField = 'campaign';
+    clickField = 'clicks'; convField = 'conversions'; convField2 = null; convMult = 1;
+    label = 'Google Ads'; color = PALETTE.google;
+    clickLabel = 'Clicks'; cpcLabel = 'CPC';
+  } else {
+    data = ttData; nameField = 'campaign_name';
+    clickField = 'clicks'; convField = 'conversions'; convField2 = null; convMult = 1.15;
+    label = 'TikTok Ads'; color = PALETTE.tiktok;
+    clickLabel = 'Clicks'; cpcLabel = 'CPC';
+  }
+
+  const spend  = sum(data, 'spend');
+  const clicks = sum(data, clickField);
+  const impr   = sum(data, 'impressions');
+  const ctr    = impr   > 0 ? clicks / impr   : 0;
+  const cpc    = clicks > 0 ? spend  / clicks : 0;
+  let   conv   = sum(data, convField) * convMult;
+  if (convField2) conv += sum(data, convField2);
+  const costPerConv = conv > 0 ? spend / conv : 0;
+
+  /* Date axis */
+  const dates        = [...new Set(data.map(r=>r.date))].sort();
+  const spendByDate  = byDate(data, 'spend');
+  const clicksByDate = byDate(data, clickField);
+
+  /* Campaigns */
+  const campaigns = aggregateCampaigns(data, nameField, label, clickField, convField, convField2)
+    .sort((a,b) => b.spend - a.spend);
+
+  const convLabel = ch === 'tiktok' ? 'Conversions (×1.15)' : ch === 'meta' ? 'Conversions (pymt+purch)' : 'Conversions';
+
+  document.getElementById('main-content').innerHTML = `
+    ${errors.length ? `<div class="error-banner">⚠ ${errors.filter(e=>e.toLowerCase().includes(ch==='google'?'google':ch==='meta'?'facebook':'tiktok')).join(' · ')}</div>` : ''}
+
+    <!-- Channel KPI tiles (6 cols) -->
+    <div class="kpi-row-6">
+      <div class="kpi-tile accent">
+        <div class="kpi-label">Spend</div>
+        <div class="kpi-value">${gbp(spend)}</div>
+        <div class="kpi-sub">${label}</div>
+      </div>
+      <div class="kpi-tile">
+        <div class="kpi-label">${clickLabel}</div>
+        <div class="kpi-value">${fmt(clicks)}</div>
+        <div class="kpi-sub">${cpcLabel} ${gbp(cpc,2)}</div>
+      </div>
+      <div class="kpi-tile">
+        <div class="kpi-label">Impressions</div>
+        <div class="kpi-value">${fmt(impr)}</div>
+        <div class="kpi-sub">CTR ${pct(ctr)}</div>
+      </div>
+      <div class="kpi-tile">
+        <div class="kpi-label">CTR</div>
+        <div class="kpi-value">${pct(ctr)}</div>
+        <div class="kpi-sub">${fmt(clicks)} / ${fmt(impr)}</div>
+      </div>
+      <div class="kpi-tile">
+        <div class="kpi-label">${cpcLabel}</div>
+        <div class="kpi-value">${gbp(cpc,2)}</div>
+        <div class="kpi-sub">Cost per click</div>
+      </div>
+      <div class="kpi-tile">
+        <div class="kpi-label">${convLabel}</div>
+        <div class="kpi-value">${fmt(Math.round(conv))}</div>
+        <div class="kpi-sub">CPConv ${gbp(costPerConv, 0)}</div>
+      </div>
+    </div>
+
+    <!-- Daily charts side by side -->
+    <div class="charts-row">
+      <div class="chart-card" style="margin-bottom:0">
+        <div class="chart-head"><div class="chart-head-title">Daily Spend</div></div>
+        <div class="chart-body"><div class="trend-wrap"><canvas id="chSpendChart"></canvas></div></div>
+      </div>
+      <div class="chart-card" style="margin-bottom:0">
+        <div class="chart-head"><div class="chart-head-title">Daily ${clickLabel}</div></div>
+        <div class="chart-body"><div class="trend-wrap"><canvas id="chClickChart"></canvas></div></div>
+      </div>
+    </div>
+
+    <!-- Campaign table -->
+    <div class="table-card" style="margin-top:14px">
+      <div class="table-head"><div class="table-head-title">${label} — Campaign Breakdown</div></div>
+      <div class="table-body"><div id="chCampaignTable"></div></div>
+    </div>
+
+    <div class="last-updated">
+      Updated ${new Date().toLocaleString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}
+    </div>
+  `;
+
+  /* Spend chart */
+  charts.chSpend = new Chart(document.getElementById('chSpendChart').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: dates.map(d => d.slice(5).replace('-','/')),
+      datasets: [{ label: 'Spend', data: dates.map(d=>spendByDate[d]||0), backgroundColor: color, borderRadius: 3 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => ` ${gbp(ctx.parsed.y)}` } }
+      },
+      scales: {
+        x: { grid:{display:false}, ticks:{font:{size:11},color:'#999'} },
+        y: { grid:{color:'#f5ede9'}, ticks:{font:{size:11},color:'#999',callback:v=>gbp(v)} }
+      }
+    }
+  });
+
+  /* Clicks chart */
+  charts.chClicks = new Chart(document.getElementById('chClickChart').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: dates.map(d => d.slice(5).replace('-','/')),
+      datasets: [{ label: clickLabel, data: dates.map(d=>clicksByDate[d]||0), backgroundColor: color + '99', borderRadius: 3 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => ` ${fmt(ctx.parsed.y)}` } }
+      },
+      scales: {
+        x: { grid:{display:false}, ticks:{font:{size:11},color:'#999'} },
+        y: { grid:{color:'#f5ede9'}, ticks:{font:{size:11},color:'#999',callback:v=>fmt(v)} }
+      }
+    }
+  });
+
+  /* Campaign table */
+  new gridjs.Grid({
+    columns: [
+      { name: 'Campaign' },
+      { name: 'Spend',   width:'100px', sort:{compare:(a,b)=>parseFloat(a)-parseFloat(b)},
+        formatter: v => gridjs.html(`<span class="spend-val">${gbp(parseFloat(v))}</span>`) },
+      { name: 'Impr.',   width:'90px',  sort:{compare:(a,b)=>parseInt(a)-parseInt(b)},    formatter:v=>fmt(parseInt(v)) },
+      { name: clickLabel,width:'90px',  sort:{compare:(a,b)=>parseInt(a)-parseInt(b)},   formatter:v=>fmt(parseInt(v)) },
+      { name: 'CPC',     width:'75px',  sort:{compare:(a,b)=>parseFloat(a)-parseFloat(b)},formatter:v=>gbp(parseFloat(v),2) },
+      { name: 'Conv.',   width:'70px',  sort:{compare:(a,b)=>parseFloat(a)-parseFloat(b)},formatter:v=>parseFloat(v).toFixed(1) },
+      { name: 'CPConv',  width:'80px',  sort:{compare:(a,b)=>parseFloat(a)-parseFloat(b)},formatter:v=>gbp(parseFloat(v),0) }
+    ],
+    data: campaigns.map(c => [
+      c.campaign,
+      c.spend.toFixed(2),
+      String(Math.round(c.impressions)),
+      String(Math.round(c.clicks)),
+      c.clicks > 0 ? (c.spend/c.clicks).toFixed(2) : '0.00',
+      c.conversions.toFixed(1),
+      c.conversions > 0 ? (c.spend/c.conversions).toFixed(0) : '0'
+    ]),
+    sort: true
+  }).render(document.getElementById('chCampaignTable'));
+}
+
+/* ── Event handlers ──────────────────────────────── */
+document.addEventListener('click', e => {
+  /* Date tabs */
+  if (e.target.classList.contains('date-tab')) {
+    document.querySelectorAll('.date-tab').forEach(t => t.classList.remove('active'));
+    e.target.classList.add('active');
+    load(e.target.dataset.range);
+    return;
+  }
+  /* Primary page nav */
+  if (e.target.classList.contains('page-nav-tab')) {
+    state.page = e.target.dataset.page;
+    render();
+    return;
+  }
+  /* Channel sub-nav */
+  if (e.target.classList.contains('channel-nav-tab') || e.target.closest('.channel-nav-tab')) {
+    const tab = e.target.classList.contains('channel-nav-tab') ? e.target : e.target.closest('.channel-nav-tab');
+    state.channel = tab.dataset.channel;
+    render();
+    return;
+  }
+  /* Platform card click-through to channel */
+  const card = e.target.closest('[data-nav-channel]');
+  if (card) {
+    state.page = 'channels';
+    state.channel = card.dataset.navChannel;
+    render();
+    return;
+  }
+});
+
+load('this_week');
+</script>
+</body>
+</html>
